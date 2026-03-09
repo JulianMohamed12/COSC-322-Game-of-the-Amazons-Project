@@ -1,10 +1,9 @@
 
 package ubc.cosc322;
 
-import java.util.Map;
-
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import ygraph.ai.smartfox.games.BaseGameGUI;
 import ygraph.ai.smartfox.games.GameClient;
@@ -37,7 +36,7 @@ public class COSC322Test extends GamePlayer{
      * @param args for name and passwd (current, any string would work)
      */
     public static void main(String[] args) {				 
-    	COSC322Test player = new COSC322Test("args[0]", "args[1]");
+    	COSC322Test player = new COSC322Test("AmazonsAIJulian", "julianspassword");
     	
     	if(player.getGameGUI() == null) {
     		player.Go();
