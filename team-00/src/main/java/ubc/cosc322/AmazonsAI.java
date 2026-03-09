@@ -40,6 +40,11 @@ public class AmazonsAI {
         }
         int currentPlayer = isMaximizing ? this.myPlayerType : this.opponentType;
         List<Move> legalMoves = board.generateLegalMoves(currentPlayer);
+        if (legalMoves.size() > 50) {
+            java.util.Collections.shuffle(legalMoves);
+            legalMoves = legalMoves.subList(0, 50);
+        }
+
         if (legalMoves.isEmpty()) {
             return isMaximizing ? -100000 : 100000;
         }
@@ -96,22 +101,52 @@ public class AmazonsAI {
 
     private int[][] calculateDistances(BoardState boardState, int playerType) {
         int[][] distGrid = new int[10][10];
+        
+        // 1. Fill the map with "Infinity"
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 distGrid[i][j] = Integer.MAX_VALUE;
             }
         }
+        
         java.util.Queue<int[]> queue = new java.util.LinkedList<>();
+        
+        // 2. Find the queens and set their starting square to 0 distance
         java.util.List<int[]> queens = boardState.findAmazons(boardState.board, playerType);
-
         for (int[] q : queens) {
             distGrid[q[0]][q[1]] = 0;
             queue.add(new int[]{q[0], q[1], 0});
         }
+        
+        int[][] directions = { {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };
+        
+        // 3. The BFS Exploration Loop
         while (!queue.isEmpty()) {
             int[] curr = queue.poll();
+            int r = curr[0];
+            int c = curr[1];
+            int d = curr[2];
+            
+            for (int[] dir : directions) {
+                int nextR = r + dir[0];
+                int nextC = c + dir[1];
+                
+                // Keep sliding until we hit the edge of the board, a queen, or an arrow
+                while (nextR >= 0 && nextR < 10 && nextC >= 0 && nextC < 10 && boardState.board[nextR][nextC] == 0) {
+                    
+                    // If this is a faster path to this square, record it
+                    if (distGrid[nextR][nextC] > d + 1) {
+                        distGrid[nextR][nextC] = d + 1;
+                        queue.add(new int[]{nextR, nextC, d + 1});
+                    }
+                    
+                    // Move one more square in the same direction
+                    nextR += dir[0];
+                    nextC += dir[1];
+                }
+            }
         }
-
+        
         return distGrid;
     }
 

@@ -93,12 +93,12 @@ public class COSC322Test extends GamePlayer{
 			String blackPlayerName = (String) msgDetails.get(AmazonsGameMessage.PLAYER_BLACK);
 
 			if (whitePlayerName.equals(this.userName)) {
-				this.playerType = 1;
-				this.opponentType = 2;
-			} 
-			else if (blackPlayerName.equals(this.userName)) {
 				this.playerType = 2;
 				this.opponentType = 1;
+			} 
+			else if (blackPlayerName.equals(this.userName)) {
+				this.playerType = 1;
+				this.opponentType = 2;
 			}
 			thisAI = new AmazonsAI(playerType);
 			if (playerType == 1) {
@@ -110,6 +110,7 @@ public class COSC322Test extends GamePlayer{
 			gamegui.setGameState(gameState);
 
 			currentBoard.updateFromServer(gameState);
+			System.out.println(currentBoard.board);
 			System.out.println(currentBoard.board);
 
 		}
