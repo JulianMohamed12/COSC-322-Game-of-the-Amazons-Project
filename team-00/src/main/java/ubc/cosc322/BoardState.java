@@ -43,7 +43,6 @@ public class BoardState {
 
     // You will put your Ray-Casting Move Generation logic here
     public List<Move> generateLegalMoves(int playerType) {
-        System.out.println("Player Type: " + playerType);
         List<Move> legalMoves = new ArrayList<>();
         // 1. Find all Amazons belonging to the current player
         List<int[]> myAmazons = findAmazons(board, playerType);

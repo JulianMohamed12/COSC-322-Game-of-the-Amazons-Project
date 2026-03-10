@@ -37,7 +37,7 @@ public class COSC322Test extends GamePlayer{
      * @param args for name and passwd (current, any string would work)
      */
     public static void main(String[] args) {				 
-    	COSC322Test player = new COSC322Test("args[0]", "args[1]");
+		COSC322Test player = new COSC322Test(args[0], args[1]);
     	
     	if(player.getGameGUI() == null) {
     		player.Go();
@@ -76,6 +76,7 @@ public class COSC322Test extends GamePlayer{
 		if(gamegui != null) {
 			gamegui.setRoomInformation(gameClient.getRoomList());
 		}
+		gameClient.joinRoom("Beaver Lake");
     }
 
     @Override
@@ -93,12 +94,12 @@ public class COSC322Test extends GamePlayer{
 			String blackPlayerName = (String) msgDetails.get(AmazonsGameMessage.PLAYER_BLACK);
 
 			if (whitePlayerName.equals(this.userName)) {
-				this.playerType = 1;
-				this.opponentType = 2;
-			} 
-			else if (blackPlayerName.equals(this.userName)) {
 				this.playerType = 2;
 				this.opponentType = 1;
+			} 
+			else if (blackPlayerName.equals(this.userName)) {
+				this.playerType = 1;
+				this.opponentType = 2;
 			}
 			thisAI = new AmazonsAI(playerType);
 			if (playerType == 1) {
@@ -159,7 +160,12 @@ public class COSC322Test extends GamePlayer{
 
     private void makeAndSendMove() {
         // Find best move (Depth 2 is a safe start for timeouts)
-        Move bestMove = thisAI.findBestMove(currentBoard, 2); 
+        Move bestMove = thisAI.findBestMove(currentBoard, 2);
+
+		if (bestMove == null) {
+        System.out.println("No legal moves available - game over!");
+        return;  // add this null check
+    	}
         
         // Update internal board with our move
         currentBoard.applyMove(bestMove, playerType);
