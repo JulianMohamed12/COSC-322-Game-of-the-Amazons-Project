@@ -4,34 +4,67 @@ import java.util.List;
 
 public class AmazonsAI {
     
-    private int myPlayerType; // 1 for White, 2 for Black
+    private int myPlayerType; // 1 for Black, 2 for White
     private int opponentType;
+
+    private long startTime;
+    private long timeLimit;
+    private boolean timeIsUp;
+
+    private boolean checkTime() {
+        if (System.currentTimeMillis() - startTime > timeLimit) {
+            timeIsUp = true;
+        }
+        return timeIsUp;
+    }
 
     public AmazonsAI(int myPlayerType) {
         this.myPlayerType = myPlayerType;
         this.opponentType = (myPlayerType == 1) ? 2 : 1;
     }
 
-    public Move findBestMove(BoardState currentBoard, int depth) {
-        int bestScore = Integer.MIN_VALUE;
-        Move bestMove = null;
+    public Move findBestMove(BoardState currentBoard, long timeLimitSeconds) {
+        this.startTime = System.currentTimeMillis();
+        this.timeLimit = timeLimitSeconds * 1000 - 500;
+        this.timeIsUp = false;
         
-        List<Move> legalMoves = currentBoard.generateLegalMoves(myPlayerType);
+        Move bestMoveOverall = null;
+        List<Move> legalMoves = currentBoard.generateLegalMoves(this.myPlayerType);
         
-        for (Move move : legalMoves) {
-            // 1. Create a hypothetical board for this move
-            BoardState simulatedBoard = new BoardState(currentBoard);
-            simulatedBoard.applyMove(move, myPlayerType);
+        if (legalMoves.isEmpty()) return null;
+        bestMoveOverall = legalMoves.get(0); // Fallback move
+        
+        // Start at Depth 1, keep going deeper until time runs out (up to depth 50)
+        for (int depth = 1; depth < 50; depth++) {
+            Move bestMoveForThisDepth = null;
+            int bestScore = Integer.MIN_VALUE;
             
-            // 2. Evaluate using Minimax
-            int score = minimax(simulatedBoard, depth - 1, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
+            for (Move move : legalMoves) {
+                if (checkTime()) break; // TIME IS UP! Stop searching this depth.
+                
+                BoardState simulatedBoard = new BoardState(currentBoard);
+                simulatedBoard.applyMove(move, myPlayerType);
+                
+                int score = minimax(simulatedBoard, depth - 1, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
+                
+                // Only accept this score if we didn't get interrupted by the timer
+                if (!timeIsUp && score > bestScore) {
+                    bestScore = score;
+                    bestMoveForThisDepth = move;
+                }
+            }
             
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = move;
+            if (timeIsUp) {
+                System.out.println("Time limit reached! Stopped at depth: " + depth);
+                break; // Stop going deeper
+            }
+            
+            if (bestMoveForThisDepth != null) {
+                bestMoveOverall = bestMoveForThisDepth;
             }
         }
-        return bestMove;
+        
+        return bestMoveOverall;
     }
 
     private int minimax(BoardState board, int depth, int alpha, int beta, boolean isMaximizing) {
@@ -40,10 +73,6 @@ public class AmazonsAI {
         }
         int currentPlayer = isMaximizing ? this.myPlayerType : this.opponentType;
         List<Move> legalMoves = board.generateLegalMoves(currentPlayer);
-        if (legalMoves.size() > 50) {
-            java.util.Collections.shuffle(legalMoves);
-            legalMoves = legalMoves.subList(0, 50);
-        }
 
         if (legalMoves.isEmpty()) {
             return isMaximizing ? -100000 : 100000;
@@ -74,29 +103,37 @@ public class AmazonsAI {
     }
     
     private int evaluateBoard(BoardState board) {
+        // 1. For each point p, compare db= dist(p,Black) and dw=dist(p,White); [cite: 356]
         int[][] myDistances = calculateDistances(board, this.myPlayerType);
         int[][] oppDistances = calculateDistances(board, this.opponentType);
         
-        int myTerritory = 0;
-        int oppTerritory = 0;
-
+        int score = 0;
+    
         for (int r = 0; r < 10; r++) {
             for (int c = 0; c < 10; c++) {
-                if (board.board[r][c] == 0) {
-                    if (myDistances[r][c] < oppDistances[r][c]) {
-                        myTerritory++;
-                    } else if (oppDistances[r][c] < myDistances[r][c]) {
-                        oppTerritory++;
+                // We only care about empty, reachable squares
+                if (board.board[r][c] == 0) { 
+                    int myD = myDistances[r][c];
+                    int oppD = oppDistances[r][c];
+    
+                    // If at least one player can reach the square
+                    if (myD != Integer.MAX_VALUE || oppD != Integer.MAX_VALUE) {
+                        
+                        // 2. if db < dw Black point (or in our case, 'My' point) [cite: 357]
+                        if (myD < oppD) {
+                            score++;
+                        } 
+                        // 3. else if db > dw White point (or in our case, 'Opponent' point) [cite: 358]
+                        else if (oppD < myD) {
+                            score--;
+                        }
+                        // 4. else point is neutral (do nothing) [cite: 359]
                     }
                 }
             }
         }
-        int myMobility = calculateMobility(board, this.myPlayerType);
-        int oppMobility = calculateMobility(board, this.opponentType);
-        int territoryScore = myTerritory - oppTerritory;
-        int mobilityScore = (myMobility - oppMobility) * 2;
         
-        return territoryScore + mobilityScore;
+        return score;
     }
 
     private int[][] calculateDistances(BoardState boardState, int playerType) {
@@ -167,5 +204,14 @@ public class AmazonsAI {
             }
         }    
         return mobility;
+    }
+
+    private class MoveScore {
+        Move move;
+        int score;
+        MoveScore(Move move, int score) {
+            this.move = move;
+            this.score = score;
+        }
     }
 }

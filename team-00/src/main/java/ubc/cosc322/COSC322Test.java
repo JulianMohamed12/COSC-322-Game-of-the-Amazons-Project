@@ -159,7 +159,7 @@ public class COSC322Test extends GamePlayer{
 
     private void makeAndSendMove() {
         // Find best move (Depth 2 is a safe start for timeouts)
-        Move bestMove = thisAI.findBestMove(currentBoard, 2); 
+        Move bestMove = thisAI.findBestMove(currentBoard, 30); 
         
         // Update internal board with our move
         currentBoard.applyMove(bestMove, playerType);
