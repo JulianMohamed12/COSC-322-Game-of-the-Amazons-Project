@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import ygraph.ai.smartfox.games.Amazon;
 import ygraph.ai.smartfox.games.BaseGameGUI;
 import ygraph.ai.smartfox.games.GameClient;
 import ygraph.ai.smartfox.games.GameMessage;
@@ -130,6 +131,9 @@ public class COSC322Test extends GamePlayer{
 			currentBoard.applyMove(opponentMove, opponentType);
 			makeAndSendMove();
 		}
+		if(messageType.equals(GameMessage.GAME_STATE_PLAYER_LOST)){
+			System.out.println(msgDetails.get(AmazonsGameMessage.GAME_STATE_PLAYER_LOST));
+		}
     	return true;   	
     }
     
@@ -158,8 +162,8 @@ public class COSC322Test extends GamePlayer{
 	}
 
     private void makeAndSendMove() {
-        // Find best move (Depth 2 is a safe start for timeouts)
-        Move bestMove = thisAI.findBestMove(currentBoard, 30); 
+        // Find best move (Can set time limit for thinking)
+        Move bestMove = thisAI.findBestMove(currentBoard, 25); 
         
         // Update internal board with our move
         currentBoard.applyMove(bestMove, playerType);

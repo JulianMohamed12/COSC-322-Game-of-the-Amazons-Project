@@ -186,32 +186,4 @@ public class AmazonsAI {
         
         return distGrid;
     }
-
-    private int calculateMobility(BoardState boardState, int playerType) {
-        int mobility = 0;
-        List<int[]> amazons = boardState.findAmazons(boardState.board, playerType);
-        int[][] directions = { {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };
-        
-        for (int[] pos : amazons) {
-            for (int[] dir : directions) {
-                int r = pos[0] + dir[0];
-                int c = pos[1] + dir[1];
-                while (r >= 0 && r < 10 && c >= 0 && c < 10 && boardState.board[r][c] == 0) {
-                    mobility++;
-                    r += dir[0];
-                    c += dir[1];
-                }
-            }
-        }    
-        return mobility;
-    }
-
-    private class MoveScore {
-        Move move;
-        int score;
-        MoveScore(Move move, int score) {
-            this.move = move;
-            this.score = score;
-        }
-    }
 }
